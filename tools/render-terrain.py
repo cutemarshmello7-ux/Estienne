@@ -4,6 +4,9 @@ from mathutils import Vector
 
 ROOT=Path(__file__).resolve().parent.parent
 OUT=ROOT/'render-work';OUT.mkdir(exist_ok=True)
+args=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
+mode=args[0] if args else 'keys'
+master=mode in ('master','master-check','master-keys')
 SVG=ROOT/'assets/estienne-monogram.svg'
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 scene=bpy.context.scene
@@ -103,7 +106,7 @@ def patch(name,x0,x1,y0,y1,nx,ny):
     for p in mesh.polygons:p.use_smooth=True
     return obj
 pad=.0005;left=mx-mark_w/2-pad;right=mx+mark_w/2+pad;bottom=my-mark_h/2-pad;top=my+mark_h/2+pad
-patch('Paper and embossed shoulders - single deformed mesh',left,right,bottom,top,1000,1045)
+patch('Paper and embossed shoulders - single deformed mesh',left,right,bottom,top,1600 if master else 1000,1672 if master else 1045)
 patch('Paper / west',-.0425,left,-.0275,.0275,36,100)
 patch('Paper / east',right,.0425,-.0275,.0275,100,100)
 patch('Paper / south',left,right,-.0275,bottom,80,50)
@@ -211,7 +214,23 @@ def pose(t):
 
 args=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
 mode=args[0] if args else 'keys'
-if mode=='keys':
+if master:
+    scene.render.use_persistent_data=True
+    scene.render.resolution_x=3840;scene.render.resolution_y=2160
+    scene.cycles.samples=192
+    scene.cycles.use_adaptive_sampling=True
+    scene.cycles.adaptive_threshold=.012
+    scene.cycles.adaptive_min_samples=24
+    scene.view_settings.exposure=-1.15
+    bpy.data.lights['Cool open sky'].energy=.18
+    fb.inputs['Base Color'].default_value=rgba('#bf974f')
+    if hasattr(scene.cycles,'denoising_use_gpu'):scene.cycles.denoising_use_gpu=True
+if mode=='master-check':
+    pose(7.2);scene.render.filepath=str(OUT/'master-check.png');bpy.ops.render.render(write_still=True)
+elif mode=='master-keys':
+    for name,t in [('ridge',3.3),('foil',7.2),('edge',9.8),('reveal',14.5)]:
+        pose(t);scene.render.filepath=str(OUT/('master-'+name+'.png'));bpy.ops.render.render(write_still=True)
+elif mode=='keys':
     scene.cycles.samples=96;scene.render.resolution_x=1600;scene.render.resolution_y=900
     for name,t in [('ridge',3.3),('edge',9.8),('reveal',14.5)]:
         pose(t);scene.render.filepath=str(OUT/(name+'.png'));bpy.ops.render.render(write_still=True)
@@ -219,12 +238,13 @@ elif mode=='check':
     scene.cycles.samples=24
     for t in [0,3.3,5.8,7.2,9.8,12,18]:
         pose(t);scene.render.filepath=str(OUT/f'check-{t}.png');bpy.ops.render.render(write_still=True)
-elif mode=='animatic':
-    scene.cycles.samples=32;scene.render.resolution_x=960;scene.render.resolution_y=540
+elif mode in ('animatic','master'):
+    if not master:
+        scene.cycles.samples=32;scene.render.resolution_x=960;scene.render.resolution_y=540
     scene.cycles.use_animated_seed=False;scene.cycles.seed=47
     if hasattr(scene.render,'use_motion_blur'):
         scene.render.use_motion_blur=True
-        scene.render.motion_blur_shutter=.35
+        scene.render.motion_blur_shutter=.10 if master else .35
     for i in range(433):
         pose(i/24)
         cam.keyframe_insert(data_path='location')
@@ -233,7 +253,7 @@ elif mode=='animatic':
         rig.keyframe_insert(data_path='location')
         rig.keyframe_insert(data_path='rotation_euler')
         window.data.keyframe_insert(data_path='energy')
-    frames=OUT/'smooth-24';frames.mkdir(exist_ok=True)
+    frames=OUT/('master-4k' if master else 'smooth-24');frames.mkdir(exist_ok=True)
     for i in range(433):
         pose(i/24);scene.render.filepath=str(frames/f'{i:04d}.png')
         if not Path(scene.render.filepath).exists():bpy.ops.render.render(write_still=True)

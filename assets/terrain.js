@@ -1,129 +1,103 @@
 const film = document.querySelector('#film');
 const screen = document.querySelector('.screen');
-const canvas = document.querySelector('#canvas');
-const context = canvas.getContext('2d', { alpha: false });
+const video = document.querySelector('#canvas');
 const play = document.querySelector('#play');
 const label = play.querySelector('.play-label');
+const icon = play.querySelector('.play-icon');
 const scrub = document.querySelector('#scrub');
 const status = document.querySelector('#load-status');
 const captions = [...document.querySelectorAll('.caption')];
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-const count = 433, duration = 18, blobs = new Map(), requests = new Map(), bitmaps = new Map(), decoding = new Map();
-let progress = 0, target = 0, playing = false, start = 0, raf = 0, busy = 0, queue = [], generation = 0;
-let drawPending = false;
-const clamp = n => Math.max(0, Math.min(1, n));
-const path = n => `assets/frames-v2/${String(n).padStart(4, '0')}.webp`;
-async function fetchFrame(n) {
-  if (blobs.has(n)) return blobs.get(n);
-  if (requests.has(n)) return requests.get(n);
-  const request = fetch(path(n)).then(r => {
-    if (!r.ok) throw new Error('Frame unavailable');
-    return r.blob();
-  }).then(blob => { blobs.set(n, blob); return blob; }).finally(() => requests.delete(n));
-  requests.set(n, request);
-  return request;
-}
-async function decode(n) {
-  if (bitmaps.has(n)) return bitmaps.get(n);
-  if (decoding.has(n)) return decoding.get(n);
-  const pending = decodeFrame(n).finally(() => decoding.delete(n));
-  decoding.set(n, pending); return pending;
-}
-async function decodeFrame(n) {
-  const blob = await fetchFrame(n);
-  if (Math.abs(n - target) > 12 || reduced.matches) return null;
-  const bitmap = await createImageBitmap(blob);
-  if (Math.abs(n - target) > 12 || reduced.matches) { bitmap.close(); return null; }
-  if (bitmaps.has(n)) bitmap.close(); else bitmaps.set(n, bitmap);
-  for (const [i, image] of bitmaps) if (Math.abs(i - target) > 12) { image.close(); bitmaps.delete(i); }
-  return bitmaps.get(n);
-}
-function requestDraw() {
-  if (drawPending) return;
-  drawPending = true;
-  requestAnimationFrame(() => { drawPending = false; draw(); });
-}
-function draw() {
-  if (reduced.matches || !bitmaps.size) return;
-  const nearest = [...bitmaps.keys()].sort((a,b) => Math.abs(a-target)-Math.abs(b-target))[0];
-  const position = progress*(count-1), lower = Math.floor(position), upper = Math.ceil(position);
-  const blend = bitmaps.has(lower) && bitmaps.has(upper);
-  const frame = bitmaps.get(blend ? lower : nearest);
-  const box = canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 1.5);
-  const w = Math.round(box.width*dpr), h = Math.round(box.height*dpr);
-  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
-  const contain = matchMedia('(max-width: 650px)').matches;
-  const scale = (contain ? Math.min : Math.max)(w/frame.width, h/frame.height);
-  context.fillStyle = '#d8d0c2'; context.fillRect(0,0,w,h);
-  context.drawImage(frame,(w-frame.width*scale)/2,(h-frame.height*scale)/2,frame.width*scale,frame.height*scale);
-  if (blend && upper !== lower) {
-    context.globalAlpha = position-lower;
-    context.drawImage(bitmaps.get(upper),(w-frame.width*scale)/2,(h-frame.height*scale)/2,frame.width*scale,frame.height*scale);
-    context.globalAlpha = 1;
-  }
-  screen.classList.add('ready'); screen.dataset.frame = blend ? lower : nearest;
-  screen.dataset.decoded = bitmaps.size;
-  play.disabled = false;
-  if (!playing) label.textContent = progress >= .999 ? 'Replay the film' : 'Play the film';
-  status.textContent = '';
-}
-function show(p) {
-  progress = clamp(p); target = Math.round(progress*(count-1));
+const sources = {master:'assets/film/terrain-4k.mp4',mobile:'assets/film/terrain-1080.mp4'};
+const duration = 18;
+const clamp = n => Math.max(0,Math.min(1,n));
+let progress = 0, playing = false, frameCallback = 0, scrollPending = false, desiredTime = null;
+function sync(time) {
+  progress = clamp(time/duration);
   scrub.value = Math.round(progress*1000);
   document.querySelector('#time').textContent = `00:${String(Math.floor(progress*duration)).padStart(2,'0')} / 00:18`;
+  screen.dataset.frame = Math.round(progress*432);
   captions.forEach(el => {
     const active = progress >= +el.dataset.from && progress < +el.dataset.to;
-    el.classList.toggle('active', active); el.setAttribute('aria-hidden', String(!active));
+    el.classList.toggle('active',active); el.setAttribute('aria-hidden',String(!active));
   });
-  requestDraw();
-  decode(target).then(requestDraw).catch(() => { status.textContent = 'This moment could not load. Scrub to try again.'; });
-  for (const n of [target+1,target-1,target+2,target-2]) if (n >= 0 && n < count) decode(n).then(requestDraw).catch(()=>{});
+  if (!playing) label.textContent = progress >= .999 ? 'Replay the film' : 'Play the film';
 }
-function stop() { playing = false; cancelAnimationFrame(raf); play.setAttribute('aria-pressed','false'); label.textContent = progress >= .999 ? 'Replay the film' : 'Play the film'; }
-function tick(now) {
+function cancelTracking() {
+  if (!frameCallback) return;
+  if (video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(frameCallback);
+  else cancelAnimationFrame(frameCallback);
+  frameCallback = 0;
+}
+function track() {
   if (!playing) return;
-  show((now-start)/(duration*1000));
-  if (progress >= 1) stop(); else raf = requestAnimationFrame(tick);
+  if (video.requestVideoFrameCallback) {
+    frameCallback = video.requestVideoFrameCallback((now,metadata) => { frameCallback = 0; sync(metadata.mediaTime); track(); });
+  } else {
+    frameCallback = requestAnimationFrame(() => { frameCallback = 0; sync(video.currentTime); track(); });
+  }
 }
-play.addEventListener('click', () => {
-  if (playing) return stop();
-  playing = true; if (progress >= .999) progress = 0;
-  start = performance.now()-progress*duration*1000;
-  label.textContent = 'Pause the film'; play.setAttribute('aria-pressed','true');
-  raf = requestAnimationFrame(tick);
+function setPlaying(value) {
+  playing = value; cancelTracking();
+  play.setAttribute('aria-pressed',String(value));
+  icon.textContent = value ? 'Ⅱ' : '▷';
+  label.textContent = value ? 'Pause the film' : progress >= .999 ? 'Replay the film' : 'Play the film';
+  if (value) track();
+}
+function stop() { video.pause(); setPlaying(false); }
+function applySeek() {
+  if (desiredTime === null || video.readyState < 1 || video.seeking) return;
+  const time = Math.min(desiredTime,Number.isFinite(video.duration) ? Math.max(0,video.duration-1/24) : duration);
+  if (Math.abs(video.currentTime-time) > .0001) video.currentTime = time;
+}
+function seek(p) {
+  stop(); desiredTime = clamp(p)*duration; sync(desiredTime); applySeek();
+}
+video.addEventListener('loadedmetadata',() => {
+  screen.dataset.resolution = `${video.videoWidth}×${video.videoHeight}`;
+  play.disabled = false;
+  applySeek();
 });
-scrub.addEventListener('input', () => { stop(); show(+scrub.value/1000); });
-let scrollPending = false;
+video.addEventListener('loadeddata',() => {
+  screen.classList.add('ready'); play.disabled = false; status.textContent = '';
+  if (desiredTime === null) sync(video.currentTime);
+});
+video.addEventListener('seeked',() => {
+  if (desiredTime !== null && Math.abs(video.currentTime-desiredTime)>1/48) { applySeek(); return; }
+  sync(video.currentTime);
+});
+video.addEventListener('play',() => setPlaying(true));
+video.addEventListener('pause',() => setPlaying(false));
+video.addEventListener('ended',() => { desiredTime = null; setPlaying(false); sync(duration); });
+video.addEventListener('timeupdate',() => { if (playing && !video.requestVideoFrameCallback) sync(video.currentTime); });
+video.addEventListener('error',() => { stop(); play.disabled = true; status.textContent = 'The film could not load. Reload to try again.'; });
+play.addEventListener('click',async () => {
+  if (playing) return stop();
+  desiredTime = null;
+  if (progress >= .999 || video.ended) { video.currentTime = 0; sync(0); }
+  try { await video.play(); }
+  catch { setPlaying(false); status.textContent = 'Tap play to start the film.'; }
+});
+scrub.addEventListener('input',() => seek(+scrub.value/1000));
 function scrollPosition() {
   if (playing || reduced.matches) return;
   const box = film.getBoundingClientRect();
-  show(clamp(-box.top/(film.offsetHeight-innerHeight)));
+  seek(clamp(-box.top/(film.offsetHeight-innerHeight)));
 }
-addEventListener('scroll', () => {
+addEventListener('scroll',() => {
   if (scrollPending) return; scrollPending = true;
   requestAnimationFrame(() => { scrollPending = false; scrollPosition(); });
-}, {passive:true});
-for (const event of ['wheel','touchstart']) addEventListener(event, () => { if (playing) stop(); }, {passive:true});
-addEventListener('resize', requestDraw);
-document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
-function pump(token) {
-  if (token !== generation || reduced.matches) return;
-  while (busy < 4 && queue.length) {
-    const n = queue.shift(); if (blobs.has(n)) continue;
-    busy++;
-    fetchFrame(n).catch(()=>{}).finally(() => { busy--; pump(generation); });
-  }
-}
+},{passive:true});
+for (const event of ['wheel','touchstart']) addEventListener(event,() => { if (playing) stop(); },{passive:true});
+document.addEventListener('visibilitychange',() => { if (document.hidden) stop(); });
 function init() {
-  generation++; stop();
-  document.body.classList.toggle('reduced', reduced.matches);
+  stop(); document.body.classList.toggle('reduced',reduced.matches);
   if (reduced.matches) {
-    queue = []; for (const bitmap of bitmaps.values()) bitmap.close(); bitmaps.clear(); return;
+    desiredTime = null; video.removeAttribute('src'); video.load(); screen.classList.remove('ready'); return;
   }
-  show(progress);
-  const order = new Set();
-  for (const step of [32,16,8,4,2,1]) for (let i=0;i<count;i+=step) order.add(i);
-  order.add(count-1); queue = [...order]; pump(generation);
+  desiredTime = progress*duration;
+  video.src = matchMedia('(max-width: 650px)').matches ? sources.mobile : sources.master;
+  video.load(); sync(desiredTime);
 }
-reduced.addEventListener('change', init);
+reduced.addEventListener('change',init);
 init();
