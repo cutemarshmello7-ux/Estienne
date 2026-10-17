@@ -8,3 +8,8 @@ The original Illustrator sheet includes personal contact details. Only the isola
 
 The paper texture assets/cotton-paper.webp was generated with the built-in image generation tool. It intentionally contains no typography or logo; brand artwork stays separate and precise.
 
+## Visual and motion direction
+
+The user rejected the previous stiff station-by-station card animation and supplied an architectural scrolling-film reference. Preserve a continuous camera journey with close-ups, pull-backs, and an orbit, rather than independent eased poses or moving flat tool illustrations. Default to warm ivory cotton. Green is not a required brand or card color; the user explicitly said the card need not be green. Current paper options are ivory, stone and ink.
+
+The current renderer is Three.js 0.180.0, vendored with its MIT license. The monogram is extruded directly from the canonical original SVG paths. Keep the original logo silhouette intact. Do not replace the interactive scene with static rendered images. Respect reduced-motion preferences and stop rendering when idle or offscreen. Reference videos and original personal stationery sheets must stay out of the public repository.
