@@ -209,11 +209,49 @@ body{margin:0}
  .card{will-change:auto}
 }
 
+
+/* The monogram is the original outlined artwork, shared by every brand surface. */
+:root{--forest:#123f32;--silver:#e8e7dc}
+.brand-lockup{display:flex;align-items:center;gap:15px}
+.brand-lockup img{display:block}
+.face{background:#f7f3ea url("assets/cotton-paper.webp") center/cover}
+.face:after{background-image:none;opacity:0}
+.card > .back{background:linear-gradient(125deg,#24584922,#061d1730),url("assets/cotton-paper.webp") center/cover;
+ background-color:var(--forest);background-blend-mode:multiply,soft-light}
+.card > .back:after{opacity:1;background:linear-gradient(110deg,#ffffff08,transparent 45%,#0000001a)}
+.brand-emboss{position:absolute;left:9%;top:18%;width:36%;height:64%;opacity:var(--e,0);
+ filter:drop-shadow(-.6px -.8px .35px #fffefa) drop-shadow(.8px 1.2px .7px #755f465e)}
+.brand-emboss:before{content:"";position:absolute;inset:0;
+ background:url("assets/cotton-paper.webp") center/cover;
+ mask:url("assets/estienne-monogram.svg") center/contain no-repeat;
+ -webkit-mask:url("assets/estienne-monogram.svg") center/contain no-repeat}
+.brand-foil{position:absolute;left:34%;top:21%;width:32%;height:58%;opacity:var(--f,0);
+ background:linear-gradient(112deg,#8d7954 3%,#f0e2b7 22%,#d1bd88 37%,#fff7d9 47%,#b49a64 54%,#ede1bd 68%,#95805a 90%);
+ background-size:240% 100%;background-position:var(--metal-light,80%) 0;
+ mask:url("assets/estienne-monogram.svg") center/contain no-repeat;
+ -webkit-mask:url("assets/estienne-monogram.svg") center/contain no-repeat;
+ filter:drop-shadow(0 .6px .25px #071e17)}
+.back .note{inset:auto 10% 9%;font:400 8px/1.5 var(--ui);letter-spacing:.24em;color:#c3c6ad;opacity:var(--f,0)}
+.tool-mark,.seal-mark{display:block;width:58%;height:65%;background:#ead9ae;
+ mask:url("assets/estienne-monogram.svg") center/contain no-repeat;
+ -webkit-mask:url("assets/estienne-monogram.svg") center/contain no-repeat}
+.tool-mark{background:#795727;filter:drop-shadow(0 1px 0 #e7ce91)}
+.foil .name{letter-spacing:.2em;margin-right:-.2em;font-size:clamp(11px,1.5vw,15px)}
+.foil .sub{font-size:clamp(10px,1.3vw,12px)}
+.envelope-pocket{background:linear-gradient(150deg,#91413a11,#46141455),url("assets/cotton-paper.webp") center/cover;
+ background-color:#742a2a;background-blend-mode:multiply,soft-light}
+.envelope-flap{background:linear-gradient(170deg,#c26b4811,#42151233),url("assets/cotton-paper.webp") center/cover;
+ background-color:#742a2a;background-blend-mode:multiply,soft-light}
+.seal{width:44px;height:44px}
+.seal-mark{width:61%;height:65%;background:#f5e8c0}
+@media(prefers-color-scheme:dark){.brand-lockup img{filter:invert(1)}}
+@media(max-width:760px){.brand-lockup{gap:10px}.brand-lockup img{width:29px;height:31px}.seal{width:34px;height:34px}}
+
 </style>
 
 </head>
 <body>
-<header class="top"><span class="word">ESTIENNE</span><span class="label">How a card is made</span></header>
+<header class="top"><span class="brand-lockup"><img src="assets/estienne-monogram.svg" alt="Estienne monogram" width="36" height="38"><span class="word">ESTIENNE</span></span><span class="label">How a card is made</span></header>
 
 <section class="intro">
   <span class="label">The art of the detail · Scroll to discover</span>
@@ -235,18 +273,18 @@ body{margin:0}
       <div class="lightpool"></div>
       <div class="ground-shadow"></div>
       <div class="env"><div class="back"><div class="liner"></div></div></div>
-      <div class="press-tool"><span>E</span></div>
+      <div class="press-tool"><span class="tool-mark"></span></div>
       <div class="foil-tool"></div>
       <div class="edge-tool"></div>
       <div class="envelope-pocket"></div>
       <div class="envelope-flap"></div>
-      <div class="seal">E</div>
+      <div class="seal"><span class="seal-mark"></span></div>
       <span class="scene-caption">COTTON STOCK / 600 G/M²</span>
       <div class="card" id="card">
         <div class="edge t"></div><div class="edge b"></div><div class="edge l"></div><div class="edge r"></div>
-        <div class="face back"><div class="note">estienne.de</div></div>
+        <div class="face back"><div class="brand-foil"></div><div class="note">ESTIENNE · estienne.de</div></div>
         <div class="face front">
-          <div class="mono">E</div>
+          <div class="brand-emboss"></div>
           <div class="ghost"></div>
           <div class="foil"><span class="name">ESTIENNE</span><span class="sub">Modern print studio</span></div>
         </div>
@@ -291,8 +329,9 @@ body{margin:0}
   const poses=[
     {at:0,rx:24,ry:-24,rz:5,y:0,s:.92},
     {at:.8,rx:8,ry:-10,rz:0,y:0,s:1},
-    {at:1.8,rx:5,ry:9,rz:-2,y:0,s:1},
-    {at:2.65,rx:67,ry:-20,rz:-7,y:-2,s:1.03},
+    {at:1.24,rx:8,ry:-10,rz:0,y:0,s:1},
+    {at:1.82,rx:7,ry:176,rz:2,y:0,s:1},
+    {at:2.65,rx:58,ry:155,rz:-7,y:-2,s:1.03},
     {at:3.18,rx:18,ry:-12,rz:-4,y:-5,s:.97},
     {at:3.48,rx:0,ry:0,rz:0,y:-33,s:.82},
     {at:3.84,rx:0,ry:0,rz:0,y:32,s:.82},
@@ -311,7 +350,7 @@ body{margin:0}
     while(n<poses.length-2 && x>poses[n+1].at)n++;
     const a=poses[n],b=poses[n+1],t=smooth((x-a.at)/(b.at-a.at));
     const v={};for(const k of ['rx','ry','rz','y','s'])v[k]=mix(a[k],b[k],t);
-    if(reduced.matches){v.rx=8;v.ry=-8;v.rz=0;v.y=0;v.s=.94}
+    if(reduced.matches){v.rx=8;v.ry=x>=1.46&&x<3.34?176:-8;v.rz=0;v.y=0;v.s=.94}
     for(const k of ['rx','ry','rz'])set(card,k,v[k]+'deg');
     set(card,'y',v.y+'%');set(card,'s',v.s);
     set(card,'e',segment(x,.55,1.03));
@@ -319,6 +358,7 @@ body{margin:0}
     set(card,'paint',segment(x,2.35,2.95));
     set(card,'foil-pos',mix(100,0,segment(x,1.4,2.25))+'%');
     set(card,'reflection',mix(-75,75,clamp(x/3.3))+'%');
+    set(card,'metal-light',mix(80,20,segment(x,1.5,3))+'%');
     const press=pulse(x,.24,.4,.93,1.2);
     set(scene,'press-opacity',reduced.matches?0:press);
     set(scene,'press-y',mix(-60,110,pulse(x,.35,.68,.8,1.15))+'%');
@@ -354,7 +394,7 @@ body{margin:0}
   function request(){if(!raf&&!document.hidden)raf=requestAnimationFrame(tick)}
   function scroll(){target=clamp((scrollY-top)/range)*4;request()}
   buttons.forEach((button,i)=>button.addEventListener('click',()=>{
-    const stops=[0,1.12,2.12,3,4];
+    const stops=[0,1.22,2.12,3,4];
     window.scrollTo({top:top+range*stops[i]/4,behavior:reduced.matches?'instant':'smooth'});
   }));
   addEventListener('scroll',scroll,{passive:true});
@@ -372,3 +412,5 @@ body{margin:0}
 
 </body>
 </html>
+
+
