@@ -166,20 +166,23 @@ camdata.clip_start=.000025;camdata.clip_end=3;camdata.lens=100
 focus=bpy.data.objects.new('Moving focus - anchored to the paper',None);bpy.context.collection.objects.link(focus)
 camdata.dof.use_dof=True;camdata.dof.focus_object=focus
 
+# Connecting moves retain decorated landmarks in frame.
 keys=[
- (0,(-.036,-.021,.0019),(-.030,-.013,.00091),100,45),
- (3.5,(-.031,-.010,.0019),(-.026,-.004,.0010),100,45),
- (5.5,(-.023,-.005,.0022),(-.018,.001,.0010),92,40),
- (7.5,(-.010,-.007,.0034),(.002,-.010,.0009),85,36),
- (9.5,(.015,-.017,.0018),(.021,-.013,.000905),85,36),
- (11,(.028,-.022,.0023),(.031,-.0273,.0009),85,32),
- (12.3,(.034,-.0287,.0017),(.033,-.0275,.0006),75,28),
- (14,(.038,-.035,.004),(.032,-.0274,.0005),65,20),
- (15.6,(.059,-.067,.030),(.008,-.006,.0008),52,12),
- (18,(.082,-.132,.15),(-.022,.015,.0009),50,7.1),
- (19.4,(.09,-.15,.205),(-.025,.022,.0010),50,5.6),
- (21,(.095,-.159,.24),(-.025,.027,.0010),50,5.6)
+ (0,(-.030,-.020,.0037),(-.024,-.009,.001),70,45),
+ (1.4,(-.027,-.013,.004),(-.020,-.004,.001),65,45),
+ (3.3,(-.021,-.007,.0065),(-.018,.001,.001),65,40),
+ (4.6,(-.005,-.032,.045),(-.003,-.005,.001),50,36),
+ (5.8,(.004,-.027,.022),(.018,-.013,.0009),58,32),
+ (7.2,(.017,-.023,.014),(.020,-.012,.0009),65,32),
+ (8.5,(.034,-.024,.009),(.031,-.018,.0009),60,28),
+ (9.3,(.039,-.031,.003),(.035,-.0274,.0005),55,28),
+ (10.7,(.022,-.034,.006),(.020,-.0274,.0005),55,24),
+ (12,(.055,-.063,.035),(.005,-.005,.0009),50,20),
+ (14.5,(.082,-.132,.15),(-.022,.015,.0009),50,16),
+ (16.3,(.090,-.150,.205),(-.025,.022,.001),50,16),
+ (18,(.095,-.159,.24),(-.025,.027,.001),50,16)
 ]
+
 times=[k[0] for k in keys]
 def pchip(t,values):
     n=len(values);d=[(values[i+1]-values[i])/(times[i+1]-times[i]) for i in range(n-1)]
@@ -194,30 +197,45 @@ def pchip(t,values):
 def smooth(a,b,t):
     v=max(0,min(1,(t-a)/(b-a)));return v*v*(3-2*v)
 def pose(t):
+    scene.frame_set(round(t*24)+1)
     cam.location=[pchip(t,[k[1][j] for k in keys]) for j in range(3)]
     focus.location=[pchip(t,[k[2][j] for k in keys]) for j in range(3)]
     cam.rotation_euler=(focus.location-cam.location).to_track_quat('-Z','Y').to_euler()
-    camdata.dof.use_dof=t>=15.6
-    camdata.lens=pchip(t,[k[3] for k in keys]);camdata.dof.aperture_fstop=max(14,pchip(t,[k[4] for k in keys]))+1800*(1-smooth(14,17,t))
-    lift=smooth(18,18.65,t)*(1-smooth(18.7,19.45,t))
-    rig.location.z=.0024*lift+.00022*smooth(19.1,20.2,t)
-    rig.location.y=.010*smooth(18.65,20.6,t)
+    camdata.dof.use_dof=False
+    camdata.lens=pchip(t,[k[3] for k in keys]);camdata.dof.aperture_fstop=max(14,pchip(t,[k[4] for k in keys]))
+    lift=smooth(14.5,15.2,t)*(1-smooth(15.3,16.0,t))
+    rig.location.z=.0024*lift+.00022*smooth(15.8,17.1,t)
+    rig.location.y=.010*smooth(15.2,17.6,t)
     rig.rotation_euler.x=.025*lift
-    window.data.energy=1.1*smooth(14,18,t)
-    scene.frame_set(round(t*24)+1)
+    window.data.energy=1.1*smooth(10.7,14.5,t)
 
 args=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
 mode=args[0] if args else 'keys'
 if mode=='keys':
     scene.cycles.samples=96;scene.render.resolution_x=1600;scene.render.resolution_y=900
-    for name,t in [('ridge',5.5),('edge',12.3),('reveal',18.0)]:
+    for name,t in [('ridge',3.3),('edge',9.8),('reveal',14.5)]:
         pose(t);scene.render.filepath=str(OUT/(name+'.png'));bpy.ops.render.render(write_still=True)
+elif mode=='check':
+    scene.cycles.samples=24
+    for t in [0,3.3,5.8,7.2,9.8,12,18]:
+        pose(t);scene.render.filepath=str(OUT/f'check-{t}.png');bpy.ops.render.render(write_still=True)
 elif mode=='animatic':
-    scene.cycles.samples=16;scene.render.resolution_x=960;scene.render.resolution_y=540
+    scene.cycles.samples=32;scene.render.resolution_x=960;scene.render.resolution_y=540
     scene.cycles.use_animated_seed=False;scene.cycles.seed=47
-    frames=OUT/'animatic';frames.mkdir(exist_ok=True)
-    for i in range(253):
-        pose(i/12);scene.render.filepath=str(frames/f'{i:04d}.png')
+    if hasattr(scene.render,'use_motion_blur'):
+        scene.render.use_motion_blur=True
+        scene.render.motion_blur_shutter=.35
+    for i in range(433):
+        pose(i/24)
+        cam.keyframe_insert(data_path='location')
+        cam.keyframe_insert(data_path='rotation_euler')
+        camdata.keyframe_insert(data_path='lens')
+        rig.keyframe_insert(data_path='location')
+        rig.keyframe_insert(data_path='rotation_euler')
+        window.data.keyframe_insert(data_path='energy')
+    frames=OUT/'smooth-24';frames.mkdir(exist_ok=True)
+    for i in range(433):
+        pose(i/24);scene.render.filepath=str(frames/f'{i:04d}.png')
         if not Path(scene.render.filepath).exists():bpy.ops.render.render(write_still=True)
         print('TERRAIN_FRAME',i,flush=True)
 elif mode=='scene':

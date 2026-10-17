@@ -8,10 +8,11 @@ const scrub = document.querySelector('#scrub');
 const status = document.querySelector('#load-status');
 const captions = [...document.querySelectorAll('.caption')];
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-const count = 253, duration = 21, blobs = new Map(), requests = new Map(), bitmaps = new Map(), decoding = new Map();
+const count = 433, duration = 18, blobs = new Map(), requests = new Map(), bitmaps = new Map(), decoding = new Map();
 let progress = 0, target = 0, playing = false, start = 0, raf = 0, busy = 0, queue = [], generation = 0;
+let drawPending = false;
 const clamp = n => Math.max(0, Math.min(1, n));
-const path = n => `assets/frames/${String(n).padStart(4, '0')}.webp`;
+const path = n => `assets/frames-v2/${String(n).padStart(4, '0')}.webp`;
 async function fetchFrame(n) {
   if (blobs.has(n)) return blobs.get(n);
   if (requests.has(n)) return requests.get(n);
@@ -37,10 +38,17 @@ async function decodeFrame(n) {
   for (const [i, image] of bitmaps) if (Math.abs(i - target) > 12) { image.close(); bitmaps.delete(i); }
   return bitmaps.get(n);
 }
+function requestDraw() {
+  if (drawPending) return;
+  drawPending = true;
+  requestAnimationFrame(() => { drawPending = false; draw(); });
+}
 function draw() {
   if (reduced.matches || !bitmaps.size) return;
   const nearest = [...bitmaps.keys()].sort((a,b) => Math.abs(a-target)-Math.abs(b-target))[0];
-  const frame = bitmaps.get(nearest);
+  const position = progress*(count-1), lower = Math.floor(position), upper = Math.ceil(position);
+  const blend = bitmaps.has(lower) && bitmaps.has(upper);
+  const frame = bitmaps.get(blend ? lower : nearest);
   const box = canvas.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 1.5);
   const w = Math.round(box.width*dpr), h = Math.round(box.height*dpr);
   if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
@@ -48,7 +56,13 @@ function draw() {
   const scale = (contain ? Math.min : Math.max)(w/frame.width, h/frame.height);
   context.fillStyle = '#d8d0c2'; context.fillRect(0,0,w,h);
   context.drawImage(frame,(w-frame.width*scale)/2,(h-frame.height*scale)/2,frame.width*scale,frame.height*scale);
-  screen.classList.add('ready'); screen.dataset.frame = nearest;
+  if (blend && upper !== lower) {
+    context.globalAlpha = position-lower;
+    context.drawImage(bitmaps.get(upper),(w-frame.width*scale)/2,(h-frame.height*scale)/2,frame.width*scale,frame.height*scale);
+    context.globalAlpha = 1;
+  }
+  screen.classList.add('ready'); screen.dataset.frame = blend ? lower : nearest;
+  screen.dataset.decoded = bitmaps.size;
   play.disabled = false;
   if (!playing) label.textContent = progress >= .999 ? 'Replay the film' : 'Play the film';
   status.textContent = '';
@@ -56,14 +70,14 @@ function draw() {
 function show(p) {
   progress = clamp(p); target = Math.round(progress*(count-1));
   scrub.value = Math.round(progress*1000);
-  document.querySelector('#time').textContent = `00:${String(Math.floor(progress*duration)).padStart(2,'0')} / 00:21`;
+  document.querySelector('#time').textContent = `00:${String(Math.floor(progress*duration)).padStart(2,'0')} / 00:18`;
   captions.forEach(el => {
     const active = progress >= +el.dataset.from && progress < +el.dataset.to;
     el.classList.toggle('active', active); el.setAttribute('aria-hidden', String(!active));
   });
-  draw();
-  decode(target).then(draw).catch(() => { status.textContent = 'This moment could not load. Scrub to try again.'; });
-  for (const n of [target+1,target-1,target+2,target-2]) if (n >= 0 && n < count) decode(n).then(draw).catch(()=>{});
+  requestDraw();
+  decode(target).then(requestDraw).catch(() => { status.textContent = 'This moment could not load. Scrub to try again.'; });
+  for (const n of [target+1,target-1,target+2,target-2]) if (n >= 0 && n < count) decode(n).then(requestDraw).catch(()=>{});
 }
 function stop() { playing = false; cancelAnimationFrame(raf); play.setAttribute('aria-pressed','false'); label.textContent = progress >= .999 ? 'Replay the film' : 'Play the film'; }
 function tick(now) {
@@ -90,7 +104,7 @@ addEventListener('scroll', () => {
   requestAnimationFrame(() => { scrollPending = false; scrollPosition(); });
 }, {passive:true});
 for (const event of ['wheel','touchstart']) addEventListener(event, () => { if (playing) stop(); }, {passive:true});
-addEventListener('resize', draw);
+addEventListener('resize', requestDraw);
 document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); });
 function pump(token) {
   if (token !== generation || reduced.matches) return;
