@@ -1,215 +1,45 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ESTIENNE Card Sequence</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
-<style>
-/* Layout: one sticky stage; a single card is made in front of you, step by step, as you scroll. Tokens taken from estienne.de. */
-:root{
-  --paper:#EFE9DD; --paper-deep:#E6DECF; --stock:#F7F3EA; --stock-edge:#DDD3C1;
-  --ink:#1A1714; --ink-soft:#4A433B; --ox:#742A2A; --gold:#A6853F; --gold-hi:#E9D49B;
-  --hair:rgba(26,23,20,.14); --shadow:rgba(40,30,20,.22);
-  --display:"EB Garamond",Georgia,"Times New Roman",serif;
-  --ui:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
-}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#161513; --paper-deep:#0d0d0c; --ink:#f0eadf; --ink-soft:#aaa298; --hair:rgba(240,234,223,.16);
-  --shadow:rgba(0,0,0,.55); --gold:#c9a36c; color-scheme:dark }}
-:root[data-theme="dark"]{
-  --paper:#161513; --paper-deep:#0d0d0c; --ink:#f0eadf; --ink-soft:#aaa298; --hair:rgba(240,234,223,.16);
-  --shadow:rgba(0,0,0,.55); --gold:#c9a36c; color-scheme:dark }
-
-*{box-sizing:border-box}
-body{background:var(--paper);color:var(--ink);font-family:var(--ui);
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow-x:hidden}
-.label{font:500 11px/1.4 var(--ui);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
-
-header.top{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;padding-block:22px;border-bottom:1px solid var(--hair)}
-.word{font:500 15px var(--ui);letter-spacing:.32em}
-
-.intro{max-width:1100px;margin:0 auto;padding-block:56px 24px;display:grid;gap:14px}
-.intro h1{font:400 clamp(40px,7vw,84px)/1 var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
-.intro p{max-width:46ch;font:400 19px/1.5 var(--display);color:var(--ink-soft);margin:0}
-
-/* ---------- sequence ---------- */
-.seq{position:relative;height:560vh}
-.stage{position:sticky;top:0;height:100vh;max-width:1100px;margin:0 auto;
-  display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:center;gap:32px}
-.copy{position:relative;min-height:260px}
-.step{position:absolute;inset:0 0 auto 0;display:grid;gap:14px;opacity:0;transform:translateY(14px);transition:opacity .5s,transform .5s}
-.step.on{opacity:1;transform:none}
-.step h2{font:400 clamp(36px,5vw,60px)/1.02 var(--display);margin:0;text-wrap:balance}
-.step p{font:400 18px/1.5 var(--display);color:var(--ink-soft);margin:0;max-width:34ch}
-.spec{font:400 12px/1.5 var(--ui);letter-spacing:.06em;color:var(--ink-soft);border-top:1px solid var(--hair);padding-top:10px;max-width:34ch;font-variant-numeric:tabular-nums}
-
-.scene{position:relative;height:min(70vh,560px);perspective:1400px;display:grid;place-items:center}
-.lightpool{position:absolute;inset:10% 6%;border-radius:50%;background:radial-gradient(closest-side,var(--paper-deep),transparent);opacity:.9}
-
-/* envelope */
-.env{position:absolute;width:min(78%,440px);aspect-ratio:1.42;left:50%;top:50%;
-  transform:translate(-50%,calc(-50% + var(--envy,140%)));opacity:var(--envo,0);transition:none}
-.env .back,.env .front,.env .flap{position:absolute;inset:0;border-radius:2px}
-.env .back{background:var(--ox)}
-.env .front{background:linear-gradient(160deg,#82302F,#5f2020);clip-path:polygon(0 38%,50% 70%,100% 38%,100% 100%,0 100%);z-index:3;box-shadow:0 30px 60px var(--shadow)}
-.env .flap{background:#6a2525;clip-path:polygon(0 0,100% 0,50% 52%);transform-origin:top;transform:rotateX(var(--flap,180deg));z-index:1}
-.env .liner{position:absolute;inset:4% 4% 50%;background:repeating-linear-gradient(45deg,#8b6a31 0 2px,#a6853f 2px 6px);clip-path:polygon(0 0,100% 0,50% 90%);opacity:.5}
-
-/* card: a 3D box, 85 × 55 mm, faces + edges */
-.card{position:relative;width:min(70vw,400px);aspect-ratio:85/55;transform-style:preserve-3d;z-index:2;
-  transform:translateY(var(--y,0)) scale(var(--s,1)) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) rotateZ(var(--rz,0deg))}
-.face{position:absolute;inset:0;background:var(--stock);backface-visibility:hidden;overflow:hidden}
-.face::after{content:"";position:absolute;inset:0;mix-blend-mode:multiply;opacity:.5;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .42  0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
-.front{transform:translateZ(4px);box-shadow:0 40px 70px -30px var(--shadow)}
-.back{transform:rotateY(180deg) translateZ(4px)}
-.edge{position:absolute;background:color-mix(in srgb,var(--stock-edge) calc(100% - var(--paint,0)*100%),var(--ox));
-  background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 1px,transparent 1px 3px)}
-.edge.t,.edge.b{left:0;width:100%;height:8px;top:50%;margin-top:-4px}
-.edge.t{transform:rotateX(90deg) translateZ(calc(var(--h)/2))}
-.edge.b{transform:rotateX(-90deg) translateZ(calc(var(--h)/2))}
-.edge.l,.edge.r{top:0;height:100%;width:8px;left:50%;margin-left:-4px;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.06) 0 1px,transparent 1px 3px)}
-.edge.l{transform:rotateY(-90deg) translateZ(calc(var(--w)/2))}
-.edge.r{transform:rotateY(90deg) translateZ(calc(var(--w)/2))}
-
-/* emboss: no ink, only light and shadow */
-.mono{position:absolute;left:9%;top:50%;transform:translateY(-52%);font:400 clamp(70px,13vw,128px)/1 var(--display);color:var(--stock);
-  text-shadow:calc(var(--e,0)*-1.4px) calc(var(--e,0)*-1.4px) 1px rgba(255,255,255,calc(var(--e,0)*.95)),
-              calc(var(--e,0)*1.6px) calc(var(--e,0)*2px) 2px rgba(80,62,40,calc(var(--e,0)*.42)),
-              calc(var(--e,0)*3px) calc(var(--e,0)*5px) 8px rgba(80,62,40,calc(var(--e,0)*.14))}
-/* hot foil wordmark */
-.foil{position:absolute;right:8%;bottom:16%;text-align:right;display:grid;gap:6px}
-.foil .name{font:500 clamp(13px,2.2vw,18px) var(--ui);letter-spacing:.42em;margin-right:-.42em;
-  color:transparent;background:linear-gradient(100deg,#8a6b2e 0%,#c7a15a 30%,#f3e3b0 calc(var(--sweep,0)*100% - 6%),#fff8e1 calc(var(--sweep,0)*100%),#c7a15a calc(var(--sweep,0)*100% + 8%),#8a6b2e 100%);
-  -webkit-background-clip:text;background-clip:text;opacity:var(--f,0);filter:drop-shadow(0 .5px 0 rgba(60,40,10,calc(var(--f,0)*.5)))}
-.foil .sub{font:italic 400 clamp(12px,1.8vw,15px) var(--display);color:#8b8173;opacity:var(--f,0)}
-.ghost{position:absolute;right:8%;bottom:16%;width:46%;height:1px;border-top:1px dashed #b9ae9b;opacity:calc(1 - var(--f,0))}
-.back .note{position:absolute;inset:auto 10% 18% 10%;font:italic 400 15px var(--display);color:#8b8173;text-align:center}
-
-/* rail */
-.rail{position:absolute;left:0;right:0;bottom:max(22px,env(safe-area-inset-bottom,0px));display:flex;gap:6px;align-items:center}
-.rail button{all:unset;cursor:pointer;flex:1;display:grid;gap:8px;padding-top:2px}
-.rail .bar{height:2px;background:var(--hair);position:relative;overflow:hidden}
-.rail .bar i{position:absolute;inset:0;background:var(--ink);transform-origin:left;transform:scaleX(var(--fill,0))}
-.rail .t{font:500 10px var(--ui);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
-.rail button:focus-visible{outline:2px solid var(--ox);outline-offset:4px}
-
-.outro{max-width:1100px;margin:0 auto;padding-block:80px 120px;border-top:1px solid var(--hair);display:grid;gap:18px}
-.outro h2{font:400 clamp(34px,5vw,56px)/1.05 var(--display);margin:0;text-wrap:balance}
-.outro p{font:400 19px/1.5 var(--display);color:var(--ink-soft);margin:0;max-width:48ch}
-.cta{display:flex;gap:12px;flex-wrap:wrap}
-.cta a{font:500 12px var(--ui);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;padding:14px 22px;border:1px solid var(--ink);color:var(--ink)}
-.cta a.solid{background:var(--ink);color:var(--paper)}
-.cta a:focus-visible{outline:2px solid var(--ox);outline-offset:3px}
-
-@media (max-width:760px){
-  .stage{grid-template-columns:1fr;grid-template-rows:auto auto;align-content:center;gap:8px}
-  .scene{order:-1;height:46vh}
-  .copy{min-height:210px}
-  .step p{font-size:16px}
-  .rail .t{display:none}
-}
-@media (prefers-reduced-motion:reduce){.step{transition:none}}
-</style>
-
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#eeeae2"><meta name="description" content="An intimate look at cotton, blind embossing and hot foil. Estienne — considered print, made tangible.">
+<title>ESTIENNE — A study in touch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/film.css">
+<script type="importmap">{"imports":{"three":"./assets/vendor/three.module.min.js"}}</script>
 </head>
 <body>
-<header class="top"><span class="word">ESTIENNE</span><span class="label">How a card is made</span></header>
-
-<section class="intro">
-  <span class="label">Scroll story · draft 1</span>
-  <h1>One card, five hands.</h1>
-  <p>Every Estienne card passes through the same five stations before it leaves the studio. Scroll to watch one being made.</p>
-</section>
-
-<section class="seq" id="seq">
-  <div class="stage">
-    <div class="copy" aria-live="polite">
-      <article class="step on"><span class="label">I · Stock</span><h2>It starts as cotton.</h2><p>A heavy sheet of cotton paper, cut to size. Soft to the touch, slow to yellow.</p><div class="spec">85 × 55 mm · 600 g/m² · 100% cotton</div></article>
-      <article class="step"><span class="label">II · Blind emboss</span><h2>Pressed, not printed.</h2><p>A brass die pushes the mark up from behind. No ink at all. It is read by light and by fingertip.</p><div class="spec">Brass die · single level · no ink</div></article>
-      <article class="step"><span class="label">III · Hot foil</span><h2>A line of gold.</h2><p>Heat and pressure lay down a thin foil. Matte champagne, so it catches the light without shouting.</p><div class="spec">Matte champagne foil · 120 °C</div></article>
-      <article class="step"><span class="label">IV · Painted edge</span><h2>The detail on the side.</h2><p>The stack is clamped and its edges painted by hand. Seen only when the card turns, and remembered for it.</p><div class="spec">Oxblood · hand painted · per stack</div></article>
-      <article class="step"><span class="label">V · Kept</span><h2>Made to be handed over.</h2><p>Sealed in a lined envelope, ready to change hands. What happens next is up to you.</p><div class="spec">Lined envelope · small editions</div></article>
-    </div>
-
-    <div class="scene" aria-hidden="true">
-      <div class="lightpool"></div>
-      <div class="env"><div class="back"><div class="liner"></div></div><div class="flap"></div><div class="front"></div></div>
-      <div class="card" id="card">
-        <div class="edge t"></div><div class="edge b"></div><div class="edge l"></div><div class="edge r"></div>
-        <div class="face back"><div class="note">estienne.de</div></div>
-        <div class="face front">
-          <div class="mono">E</div>
-          <div class="ghost"></div>
-          <div class="foil"><span class="name">ESTIENNE</span><span class="sub">Modern print studio</span></div>
-        </div>
-      </div>
-    </div>
-
-    <nav class="rail" aria-label="Steps">
-      <button data-i="0"><span class="bar"><i></i></span><span class="t">Stock</span></button>
-      <button data-i="1"><span class="bar"><i></i></span><span class="t">Emboss</span></button>
-      <button data-i="2"><span class="bar"><i></i></span><span class="t">Foil</span></button>
-      <button data-i="3"><span class="bar"><i></i></span><span class="t">Edge</span></button>
-      <button data-i="4"><span class="bar"><i></i></span><span class="t">Kept</span></button>
-    </nav>
-  </div>
-</section>
-
-<section class="outro">
-  <span class="label">Your turn</span>
-  <h2>Tell us what it has to do.</h2>
-  <p>The occasion, the quantity, the feel you want. We propose the stock, the technique and the proportion.</p>
-  <div class="cta"><a class="solid" href="https://estienne.de/" target="_blank" rel="noopener">Start a project</a><a href="https://estienne.de/" target="_blank" rel="noopener">See the work</a></div>
-</section>
-
-<script>
-(()=>{
-  // keyframe per station: rotation, lift, scale, emboss, foil, edge paint, envelope
-  const K=[
-    {rx:22,ry:-26,rz:4, y:0, s:.92,e:0,f:0,sw:0, p:0,env:0},
-    {rx:10,ry:-12,rz:1, y:0, s:1,  e:1,f:0,sw:0, p:0,env:0},
-    {rx:6, ry:8,  rz:-1,y:0, s:1,  e:1,f:1,sw:1, p:0,env:0},
-    {rx:66,ry:-24,rz:-6,y:0, s:.95,e:1,f:1,sw:1, p:1,env:0},
-    {rx:4, ry:0,  rz:0, y:-8,s:.78,e:1,f:1,sw:1, p:1,env:1},
-  ];
-  const seq=document.getElementById('seq'),card=document.getElementById('card'),
-        env=document.querySelector('.env'),steps=[...document.querySelectorAll('.step')],
-        bars=[...document.querySelectorAll('.rail i')],btns=[...document.querySelectorAll('.rail button')];
-  const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, lerp=(a,b,t)=>a+(b-a)*t;
-  function size(){const r=card.getBoundingClientRect();card.style.setProperty('--w',card.offsetWidth+'px');card.style.setProperty('--h',card.offsetHeight+'px')}
-  let cur=-1;
-  function frame(){
-    const r=seq.getBoundingClientRect(),span=seq.offsetHeight-innerHeight;
-    const p=Math.min(1,Math.max(0,-r.top/span));          // 0..1 across the sequence
-    const x=p*(K.length-1), i=Math.min(K.length-2,Math.floor(x));
-    // hold on each station, move in between
-    let t=x-i; t=ease(Math.min(1,Math.max(0,(t-.25)/.5)));
-    const a=K[i],b=K[i+1],v={};for(const k in a)v[k]=lerp(a[k],b[k],t);
-    const cs=card.style;
-    cs.setProperty('--rx',v.rx+'deg');cs.setProperty('--ry',v.ry+'deg');cs.setProperty('--rz',v.rz+'deg');
-    cs.setProperty('--y',v.y+'%');cs.setProperty('--s',v.s);cs.setProperty('--e',v.e);
-    cs.setProperty('--f',v.f);cs.setProperty('--sweep',v.sw);cs.setProperty('--paint',v.p);
-    env.style.setProperty('--envo',Math.min(1,v.env*1.6));
-    env.style.setProperty('--envy',(1-v.env)*60+18+'%');
-    env.style.setProperty('--flap',(180-Math.max(0,v.env-.6)/.4*0)+'deg');
-    const on=Math.round(x);
-    if(on!==cur){steps.forEach((s,j)=>s.classList.toggle('on',j===on));cur=on}
-    bars.forEach((b,j)=>b.style.setProperty('--fill',Math.min(1,Math.max(0,x-j+.5))));
-  }
-  btns.forEach(b=>b.addEventListener('click',()=>{
-    const span=seq.offsetHeight-innerHeight, j=+b.dataset.i;
-    scrollTo({top:seq.offsetTop+span*j/(K.length-1),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
-  }));
-  size();frame();
-  addEventListener('resize',()=>{size();frame()});
-  let raf=0;addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(()=>{raf=0;frame()})},{passive:true});
-})();
-</script>
-
-</body>
-</html>
+<header class="masthead"><a class="brand" href="#" aria-label="Estienne, back to beginning"><img src="assets/estienne-monogram.svg" alt="" width="31" height="33"><span>ESTIENNE</span></a><span class="header-note">Considered print. Made tangible.</span><a class="project-link" href="https://estienne.de/" target="_blank" rel="noopener">Start a conversation <span aria-hidden="true">↗</span></a></header>
+<main>
+<section class="sequence" id="sequence" aria-label="A study in touch: an interactive card film">
+<div class="stage">
+<div id="render" class="render" aria-hidden="true"><img class="fallback-mark" src="assets/estienne-monogram.svg" alt=""></div>
+<div class="wash" aria-hidden="true"></div>
+<div class="edition">ESTIENNE / MATERIAL STUDIES <span>NO. 01</span></div>
+<div class="chapters">
+<article class="chapter active" aria-hidden="false"><span class="eyebrow">01 / The beginning</span><h1>A study <br>in <em>touch.</em></h1><p>Before a word is read, <br>something is already felt.</p><span class="detail">Cotton paper · 600 g/m²</span></article>
+<article class="chapter" aria-hidden="true"><span class="eyebrow">02 / Beneath the surface</span><h2>Light gives <br>it <em>form.</em></h2><p>A mark pressed into the paper. <br>Quiet enough to be felt first.</p><span class="detail">Blind emboss · Original Estienne monogram</span></article>
+<article class="chapter" aria-hidden="true"><span class="eyebrow">03 / A passing reflection</span><h2>A little <br><em>alchemy.</em></h2><p>Champagne foil meets cotton. <br>The light does the rest.</p><span class="detail">Hot foil · Heat and pressure</span></article>
+<article class="chapter" aria-hidden="true"><span class="eyebrow">04 / A different perspective</span><h2>Even the <br><em>edges.</em></h2><p>A fine line of oxblood. <br>A detail found by turning it over.</p><span class="detail">85 × 55 mm · Hand-finished edge</span></article>
+<article class="chapter" aria-hidden="true"><span class="eyebrow">05 / The whole impression</span><h2>Made to <br>be <em>kept.</em></h2><p>Paper, proportion, and a little care. <br>Something worth handing over.</p><span class="detail">Small editions · Lasting impressions</span></article>
+</div>
+<span class="object-note" aria-hidden="true">01 — Cotton, before anything else.</span>
+<div class="controls">
+<div class="transport"><button id="play" type="button" disabled><span class="play-icon" aria-hidden="true">▷</span><span class="play-label">Loading the film</span></button><span class="scroll-hint">or scroll to explore <span aria-hidden="true">↓</span></span></div>
+<nav class="chapter-nav" aria-label="Film chapters">
+<button type="button" data-chapter="0" aria-label="Beginning" aria-current="step"><span>01</span></button>
+<button type="button" data-chapter="1" aria-label="Blind emboss"><span>02</span></button>
+<button type="button" data-chapter="2" aria-label="Hot foil"><span>03</span></button>
+<button type="button" data-chapter="3" aria-label="Painted edge"><span>04</span></button>
+<button type="button" data-chapter="4" aria-label="Finished card"><span>05</span></button>
+</nav>
+<fieldset class="paper-picker"><legend>Paper study</legend><button type="button" data-paper="ivory" aria-label="Ivory paper" aria-pressed="true" style="--swatch:#f2ecdf"></button><button type="button" data-paper="stone" aria-label="Stone paper" aria-pressed="false" style="--swatch:#a49e95"></button><button type="button" data-paper="ink" aria-label="Ink paper" aria-pressed="false" style="--swatch:#343333"></button></fieldset>
+</div>
+<div class="progress" aria-hidden="true"><i></i></div>
+<p class="render-message" role="status">Preparing a closer look…</p>
+<noscript><p class="no-script">Enable JavaScript to explore the card film.</p></noscript>
+</div></section>
+<section class="outro"><span class="eyebrow">Your next impression</span><h2>What should <br>it <em>feel like?</em></h2><div><p>The occasion, the quantity, the feeling. <br>We will take it from there.</p><a href="https://estienne.de/" target="_blank" rel="noopener">Let’s make something <span aria-hidden="true">↗</span></a></div></section>
+</main><script type="module" src="assets/film.js"></script>
+</body></html>
