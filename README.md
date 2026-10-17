@@ -1,22 +1,19 @@
-# ESTIENNE - A study in touch
+# Terrain — Estienne material film
 
-A buildless, scroll-controlled 3D film about cotton paper, blind embossing, champagne foil, a painted edge and the finished stationery pair. Press **Play the film** for the 26-second camera journey, scroll to scrub, or select a chapter. Paper colors are ivory (default), stone and ink.
+A new 21-second camera study following cotton fibres, blind emboss, champagne foil, the layered edge and the complete card. The original outlined CE monogram remains the canonical brand asset. Warm ivory, stone and oxblood replace the earlier green default.
 
-## Run locally
+This is a motion study: 253 rendered frames at 12 fps, 960 × 540, plus three 1600 × 900 look-development stills. It is not the final production master. Camera timing, transitions, paper detail, foil reflection and the final envelope tuck should be reviewed before a higher-resolution 24 fps render.
 
-Serve this directory with any static HTTP server. For example: `python -m http.server 8000`, then open `http://localhost:8000`. Opening index.html directly as a file does not support the ES-module imports and asset loading. GitHub Pages serves the project without a build step.
+## Preview
 
-## Implementation
+Serve this directory with any static web server. Open index.html, scroll directly through the film, use the timeline or select Play the film. There is no scroll spring or autonomous camera drift. Mobile displays the complete landscape frame with captions below. Reduced-motion visitors receive a static four-image journey without sequence preloading.
 
-- `assets/film.js`: actual 3D card, bevelled original logo geometry, physical cotton/foil materials, studio lighting and play/scroll controls.
-- `assets/motion.js`: a single continuously differentiable camera path and a refresh-rate-independent critically damped spring.
-- `assets/film.css`: responsive editorial layout and chapter transitions.
-- `assets/estienne-monogram.svg`: canonical original vector artwork. See AGENTS.md before changing branding.
-- `assets/cotton-paper.webp`: generated cotton texture, used as a subtle bump map.
-- `assets/vendor/`: locally served Three.js 0.180.0 and its SVG loader / room environment, distributed under the included MIT license. No external JavaScript CDN is required at runtime.
+The player keeps compressed WebP frames in memory and decodes only a bounded window around the current frame. It closes evicted bitmaps and pauses playback when the page becomes hidden. It has no production JavaScript dependencies.
 
-The scene stops rendering at rest, offscreen and when the tab is hidden. Reduced-motion mode replaces the moving camera with a fixed composition and hides film playback. WebGL2 is required for the 3D view; a text-and-logo fallback is shown if rendering cannot initialize. Fonts fall back to local serif/sans-serif fonts if Google Fonts is unavailable.
+## Render
 
-## Validation
+Blender 5.2 / Cycles source: tools/render-terrain.py. Run with -- animatic for the 12 fps study or -- keys for three high-quality stills. The development machine uses NVIDIA OptiX; adapt the device selection for other machines. The script expects Windows Garamond fonts at C:/Windows/Fonts/GARA.TTF and GARAIT.TTF; use licensed local equivalents if unavailable.
 
-The camera path was sampled at 1,001 progress positions, its velocity was checked on both sides of every internal join, and the spring was verified to produce the same result at 60 and 144 Hz. Desktop and a 390 x 650 embedded viewport were reviewed in the browser. Physical mobile-device performance has not been tested.
+The logo heightmap derives deterministically from assets/estienne-monogram.svg, never from an AI redraw. tools/prepare-assets.py converts the canonical SVG with a local sharp installation, softens its height shoulders and writes a 16-bit displacement map. tools/package-frames.py converts completed PNG renders to website WebPs.
+
+The scene uses metres, an 85 × 55 mm card, a continuous deformed paper surface, fine cotton fibres, a three-layer oxblood edge, native text curves and a physical envelope. Reference videos, original stationery sheets, private consultations and full-sheet previews must not be committed.

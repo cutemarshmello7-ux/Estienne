@@ -1,0 +1,6 @@
+render-work/
+*.npy
+*.blend*
+*.log
+optix7cache.db*
+qa-*.html
