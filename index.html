@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ESTIENNE Card Sequence</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
@@ -65,8 +64,8 @@ header.top{max-width:1100px;margin:0 auto;display:flex;justify-content:space-bet
 .face{position:absolute;inset:0;background:var(--stock);backface-visibility:hidden;overflow:hidden}
 .face::after{content:"";position:absolute;inset:0;mix-blend-mode:multiply;opacity:.5;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .42  0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
-.front{transform:translateZ(4px);box-shadow:0 40px 70px -30px var(--shadow)}
-.back{transform:rotateY(180deg) translateZ(4px)}
+.card > .front{transform:translateZ(4px);box-shadow:0 40px 70px -30px var(--shadow)}
+.card > .back{transform:rotateY(180deg) translateZ(4px)}
 .edge{position:absolute;background:color-mix(in srgb,var(--stock-edge) calc(100% - var(--paint,0)*100%),var(--ox));
   background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.06) 0 1px,transparent 1px 3px)}
 .edge.t,.edge.b{left:0;width:100%;height:8px;top:50%;margin-top:-4px}
@@ -114,6 +113,102 @@ header.top{max-width:1100px;margin:0 auto;display:flex;justify-content:space-bet
   .rail .t{display:none}
 }
 @media (prefers-reduced-motion:reduce){.step{transition:none}}
+
+/* Motion components share a timeline, but keep independent 3D planes. */
+body{margin:0}
+.intro{padding-block:44px 12px}
+.intro .label{display:flex;align-items:center;gap:12px}
+.intro .label:before{content:"";width:24px;height:1px;background:var(--gold)}
+.seq{height:620svh}
+.stage{height:100svh;min-height:580px}
+.scene{isolation:isolate}
+.card{width:min(76%,400px);will-change:transform}
+.face{border-radius:2px;background:linear-gradient(125deg,#fcf9f1,#f2ecdf)}
+.face:after{pointer-events:none;opacity:.24}
+.card > .front{box-shadow:none}
+.mono{font-size:clamp(70px,10.5vw,128px)}
+.ghost{display:none}
+.ground-shadow{position:absolute;width:66%;height:13%;top:72%;left:17%;border-radius:50%;
+ background:radial-gradient(ellipse,rgba(45,30,18,.22),transparent 70%);filter:blur(13px);
+ transform:scale(var(--shadow-scale,1));opacity:var(--shadow-opacity,.6)}
+.lightpool{inset:0 -8%;background:radial-gradient(ellipse,rgba(255,250,235,.5),transparent 65%)}
+.face.front:before{content:"";position:absolute;inset:-50%;pointer-events:none;
+ background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.48) 50%,transparent 65%);
+ transform:translateX(var(--reflection,-75%));opacity:.55}
+.foil .name{background-size:200% 100%;background-position:var(--foil-pos,100%) 0;
+ background-image:linear-gradient(110deg,#80602a 0%,#b48b45 28%,#fff1bd 45%,#d2b269 53%,#86632b 72%,#e7ce91 100%)}
+.press-tool{position:absolute;z-index:5;width:23%;aspect-ratio:1;left:19%;top:7%;
+ display:grid;place-items:center;transform:translateY(var(--press-y,-60%)) rotateX(16deg) rotateZ(-5deg);
+ background:linear-gradient(135deg,#d9bc79,#88622d);border:1px solid #ba9756;border-radius:4px;
+ box-shadow:8px 14px 24px rgba(59,38,17,.18),inset 0 0 0 5px rgba(255,236,177,.17);
+ opacity:var(--press-opacity,0);pointer-events:none}
+.press-tool span{font:400 64px var(--display);color:#795527;text-shadow:0 1px #e7ce91}
+.foil-tool{position:absolute;z-index:5;width:76%;height:19%;left:12%;top:48%;pointer-events:none;
+ background:linear-gradient(100deg,#7d5b28,#dec485 24%,#fff1ba 48%,#b0863e 72%,#f5dfa1);
+ transform:translateX(var(--ribbon-x,-140%)) rotateZ(-7deg);opacity:var(--ribbon-opacity,0);
+ box-shadow:0 8px 14px rgba(65,45,18,.12)}
+.edge-tool{position:absolute;z-index:5;width:38%;height:7px;top:64%;left:31%;border-radius:4px;
+ background:linear-gradient(#a34a44,#742a2a);transform:translateX(var(--brush-x,-130%)) rotateZ(-6deg);
+ opacity:var(--brush-opacity,0);box-shadow:0 4px 9px #742a2a33}
+.env,.envelope-pocket,.envelope-flap{position:absolute;width:min(88%,440px);aspect-ratio:1.42;
+ left:50%;top:50%;transform:translate(-50%,calc(-50% + var(--env-y,65%)));
+ opacity:var(--env-opacity,0);pointer-events:none}
+.env{z-index:1}
+.env .back{transform:none;box-shadow:0 25px 40px -20px var(--shadow);border:1px solid #602020;
+ background:linear-gradient(135deg,#873b36,#642323)}
+.env .liner{inset:3% 3% 40%;clip-path:none;opacity:.45}
+.envelope-pocket{z-index:3;background:linear-gradient(150deg,#91413a,#6d2928 65%,#5f2222);
+ clip-path:polygon(0 0,50% 52%,100% 0,100% 100%,0 100%);border-radius:3px}
+.envelope-pocket:after{content:"";position:absolute;inset:0;
+ background:linear-gradient(32deg,transparent 49.6%,#b3675426 50%,transparent 50.5%),
+ linear-gradient(-32deg,transparent 49.6%,#41161533 50%,transparent 50.5%)}
+.envelope-flap{z-index:4;background:linear-gradient(170deg,#8f3e37,#702a27);
+ clip-path:polygon(0 0,100% 0,50% 54%);transform-origin:50% 0;
+ transform:translate(-50%,calc(-50% + var(--env-y,65%))) rotateX(var(--flap-angle,180deg));
+ backface-visibility:visible;filter:drop-shadow(0 2px 2px #30141433)}
+.seal{position:absolute;z-index:6;left:50%;top:58%;width:38px;height:38px;border-radius:50%;
+ display:grid;place-items:center;font:italic 25px var(--display);color:#f0dba4;
+ background:linear-gradient(135deg,#c7a664,#8e6c35);box-shadow:0 2px 6px #30141440;
+ opacity:var(--seal-opacity,0);transform:translate(-50%,0) scale(var(--seal-scale,.8))}
+.scene-caption{position:absolute;bottom:1%;left:0;right:0;text-align:center;
+ font:500 9px/1.5 var(--ui);letter-spacing:.22em;color:var(--ink-soft);opacity:.7}
+.step{pointer-events:none;visibility:hidden;transition:opacity .35s,transform .55s,visibility .35s}
+.step.on{pointer-events:auto;visibility:visible}
+.rail{gap:16px}
+.rail button{padding-block:14px;min-height:44px}
+.rail .bar{height:1px}
+.rail .bar i{background:var(--ox)}
+.rail button[aria-current="step"] .t{color:var(--ink)}
+@media(max-width:760px){
+ .intro{padding-block:34px 18px}
+ .intro h1{font-size:clamp(42px,10vw,70px)}
+ .intro p{font-size:18px}
+ .stage{min-height:0;grid-template-rows:minmax(0,1fr) auto;align-content:stretch;
+  gap:12px;padding-block:20px 84px}
+ .scene{height:100%;min-height:190px;max-height:47svh;align-self:center}
+ .copy{min-height:210px}
+ .step{gap:10px}
+ .step h2{font-size:36px}
+ .step p{max-width:40ch}
+ .spec{font-size:11px}
+ .mono{font-size:clamp(66px,23vw,110px)}
+ .foil .name{font-size:clamp(11px,3vw,16px)}
+ .scene-caption{bottom:-6px;font-size:8px}
+ .rail{bottom:12px;gap:10px}
+ .rail .t{display:block;font-size:8px;letter-spacing:.08em}
+ .press-tool span{font-size:42px}
+ .seal{width:30px;height:30px;font-size:21px}
+}
+@media(max-height:650px) and (max-width:760px){
+ .stage{gap:6px;padding-block:8px 65px}
+ .copy{min-height:185px}.step h2{font-size:30px}.step p{font-size:15px}
+ .scene{min-height:150px}.scene-caption{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .step{transition:none}.press-tool,.foil-tool,.edge-tool{display:none}
+ .card{will-change:auto}
+}
+
 </style>
 
 </head>
@@ -121,7 +216,7 @@ header.top{max-width:1100px;margin:0 auto;display:flex;justify-content:space-bet
 <header class="top"><span class="word">ESTIENNE</span><span class="label">How a card is made</span></header>
 
 <section class="intro">
-  <span class="label">Scroll story · draft 1</span>
+  <span class="label">The art of the detail · Scroll to discover</span>
   <h1>One card, five hands.</h1>
   <p>Every Estienne card passes through the same five stations before it leaves the studio. Scroll to watch one being made.</p>
 </section>
@@ -138,7 +233,15 @@ header.top{max-width:1100px;margin:0 auto;display:flex;justify-content:space-bet
 
     <div class="scene" aria-hidden="true">
       <div class="lightpool"></div>
-      <div class="env"><div class="back"><div class="liner"></div></div><div class="flap"></div><div class="front"></div></div>
+      <div class="ground-shadow"></div>
+      <div class="env"><div class="back"><div class="liner"></div></div></div>
+      <div class="press-tool"><span>E</span></div>
+      <div class="foil-tool"></div>
+      <div class="edge-tool"></div>
+      <div class="envelope-pocket"></div>
+      <div class="envelope-flap"></div>
+      <div class="seal">E</div>
+      <span class="scene-caption">COTTON STOCK / 600 G/M²</span>
       <div class="card" id="card">
         <div class="edge t"></div><div class="edge b"></div><div class="edge l"></div><div class="edge r"></div>
         <div class="face back"><div class="note">estienne.de</div></div>
@@ -168,47 +271,103 @@ header.top{max-width:1100px;margin:0 auto;display:flex;justify-content:space-bet
 </section>
 
 <script>
+
 (()=>{
-  // keyframe per station: rotation, lift, scale, emboss, foil, edge paint, envelope
-  const K=[
-    {rx:22,ry:-26,rz:4, y:0, s:.92,e:0,f:0,sw:0, p:0,env:0},
-    {rx:10,ry:-12,rz:1, y:0, s:1,  e:1,f:0,sw:0, p:0,env:0},
-    {rx:6, ry:8,  rz:-1,y:0, s:1,  e:1,f:1,sw:1, p:0,env:0},
-    {rx:66,ry:-24,rz:-6,y:0, s:.95,e:1,f:1,sw:1, p:1,env:0},
-    {rx:4, ry:0,  rz:0, y:-8,s:.78,e:1,f:1,sw:1, p:1,env:1},
+  'use strict';
+  const seq=document.getElementById('seq'), card=document.getElementById('card');
+  const scene=document.querySelector('.scene');
+  const steps=[...document.querySelectorAll('.step')];
+  const buttons=[...document.querySelectorAll('.rail button')];
+  const bars=[...document.querySelectorAll('.rail i')];
+  const caption=document.querySelector('.scene-caption');
+  const captions=['COTTON STOCK / 600 G/M²','BLIND EMBOSS / BRASS & PRESSURE',
+    'CHAMPAGNE FOIL / 120 °C','OXBLOOD EDGE / FINISHED BY HAND','SEALED / READY TO CHANGE HANDS'];
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+  const mix=(a,b,t)=>a+(b-a)*t;
+  const smooth=t=>{t=clamp(t);return t*t*(3-2*t)};
+  const segment=(x,a,b)=>smooth((x-a)/(b-a));
+  const pulse=(x,a,b,c,d)=>segment(x,a,b)*(1-segment(x,c,d));
+  const poses=[
+    {at:0,rx:24,ry:-24,rz:5,y:0,s:.92},
+    {at:.8,rx:8,ry:-10,rz:0,y:0,s:1},
+    {at:1.8,rx:5,ry:9,rz:-2,y:0,s:1},
+    {at:2.65,rx:67,ry:-20,rz:-7,y:-2,s:1.03},
+    {at:3.18,rx:18,ry:-12,rz:-4,y:-5,s:.97},
+    {at:3.48,rx:0,ry:0,rz:0,y:-33,s:.82},
+    {at:3.84,rx:0,ry:0,rz:0,y:32,s:.82},
+    {at:4,rx:0,ry:0,rz:0,y:32,s:.82}
   ];
-  const seq=document.getElementById('seq'),card=document.getElementById('card'),
-        env=document.querySelector('.env'),steps=[...document.querySelectorAll('.step')],
-        bars=[...document.querySelectorAll('.rail i')],btns=[...document.querySelectorAll('.rail button')];
-  const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2, lerp=(a,b,t)=>a+(b-a)*t;
-  function size(){const r=card.getBoundingClientRect();card.style.setProperty('--w',card.offsetWidth+'px');card.style.setProperty('--h',card.offsetHeight+'px')}
-  let cur=-1;
-  function frame(){
-    const r=seq.getBoundingClientRect(),span=seq.offsetHeight-innerHeight;
-    const p=Math.min(1,Math.max(0,-r.top/span));          // 0..1 across the sequence
-    const x=p*(K.length-1), i=Math.min(K.length-2,Math.floor(x));
-    // hold on each station, move in between
-    let t=x-i; t=ease(Math.min(1,Math.max(0,(t-.25)/.5)));
-    const a=K[i],b=K[i+1],v={};for(const k in a)v[k]=lerp(a[k],b[k],t);
-    const cs=card.style;
-    cs.setProperty('--rx',v.rx+'deg');cs.setProperty('--ry',v.ry+'deg');cs.setProperty('--rz',v.rz+'deg');
-    cs.setProperty('--y',v.y+'%');cs.setProperty('--s',v.s);cs.setProperty('--e',v.e);
-    cs.setProperty('--f',v.f);cs.setProperty('--sweep',v.sw);cs.setProperty('--paint',v.p);
-    env.style.setProperty('--envo',Math.min(1,v.env*1.6));
-    env.style.setProperty('--envy',(1-v.env)*60+18+'%');
-    env.style.setProperty('--flap',(180-Math.max(0,v.env-.6)/.4*0)+'deg');
-    const on=Math.round(x);
-    if(on!==cur){steps.forEach((s,j)=>s.classList.toggle('on',j===on));cur=on}
-    bars.forEach((b,j)=>b.style.setProperty('--fill',Math.min(1,Math.max(0,x-j+.5))));
+  let target=0,shown=0,raf=0,last=0,active=-1,range=1,top=0;
+  const set=(el,k,v)=>el.style.setProperty('--'+k,v);
+  function measure(){
+    top=seq.getBoundingClientRect().top+scrollY;
+    range=Math.max(1,seq.offsetHeight-document.querySelector('.stage').offsetHeight);
+    set(card,'w',card.offsetWidth+'px');set(card,'h',card.offsetHeight+'px');
+    target=clamp((scrollY-top)/range)*4;
   }
-  btns.forEach(b=>b.addEventListener('click',()=>{
-    const span=seq.offsetHeight-innerHeight, j=+b.dataset.i;
-    scrollTo({top:seq.offsetTop+span*j/(K.length-1),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  function draw(x){
+    let n=0;
+    while(n<poses.length-2 && x>poses[n+1].at)n++;
+    const a=poses[n],b=poses[n+1],t=smooth((x-a.at)/(b.at-a.at));
+    const v={};for(const k of ['rx','ry','rz','y','s'])v[k]=mix(a[k],b[k],t);
+    if(reduced.matches){v.rx=8;v.ry=-8;v.rz=0;v.y=0;v.s=.94}
+    for(const k of ['rx','ry','rz'])set(card,k,v[k]+'deg');
+    set(card,'y',v.y+'%');set(card,'s',v.s);
+    set(card,'e',segment(x,.55,1.03));
+    set(card,'f',segment(x,1.45,1.96));
+    set(card,'paint',segment(x,2.35,2.95));
+    set(card,'foil-pos',mix(100,0,segment(x,1.4,2.25))+'%');
+    set(card,'reflection',mix(-75,75,clamp(x/3.3))+'%');
+    const press=pulse(x,.24,.4,.93,1.2);
+    set(scene,'press-opacity',reduced.matches?0:press);
+    set(scene,'press-y',mix(-60,110,pulse(x,.35,.68,.8,1.15))+'%');
+    set(scene,'ribbon-opacity',reduced.matches?0:pulse(x,1.23,1.4,1.85,2.1));
+    set(scene,'ribbon-x',mix(-140,145,segment(x,1.25,2.07))+'%');
+    set(scene,'brush-opacity',reduced.matches?0:pulse(x,2.25,2.4,2.86,3.05));
+    set(scene,'brush-x',mix(-130,130,segment(x,2.3,2.97))+'%');
+    const envelope=segment(x,3.12,3.45);
+    set(scene,'env-opacity',envelope);
+    set(scene,'env-y',mix(65,14,envelope)+'%');
+    set(scene,'flap-angle',mix(180,0,segment(x,3.84,3.98))+'deg');
+    set(scene,'seal-opacity',segment(x,3.96,4));
+    set(scene,'seal-scale',mix(.8,1,segment(x,3.96,4)));
+    card.style.opacity=1-segment(x,3.91,3.98);
+    set(scene,'shadow-scale',mix(1,.65,clamp(v.rx/75)));
+    set(scene,'shadow-opacity',mix(.5,.18,clamp(v.rx/75)));
+    const current=x<.48?0:x<1.46?1:x<2.42?2:x<3.34?3:4;
+    if(current!==active){
+      steps.forEach((step,i)=>{step.classList.toggle('on',i===current);step.setAttribute('aria-hidden',String(i!==current))});
+      buttons.forEach((button,i)=>{if(i===current)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current')});
+      caption.textContent=captions[current];active=current;
+    }
+    bars.forEach((bar,i)=>set(bar,'fill',clamp(x-i+1)));
+  }
+  function tick(now){
+    const dt=last?Math.min(64,now-last):16;last=now;
+    shown=reduced.matches?target:mix(shown,target,1-Math.exp(-dt/85));
+    if(Math.abs(shown-target)<.0002)shown=target;
+    draw(shown);
+    if(shown!==target)raf=requestAnimationFrame(tick);
+    else{raf=0;last=0}
+  }
+  function request(){if(!raf&&!document.hidden)raf=requestAnimationFrame(tick)}
+  function scroll(){target=clamp((scrollY-top)/range)*4;request()}
+  buttons.forEach((button,i)=>button.addEventListener('click',()=>{
+    const stops=[0,1.12,2.12,3,4];
+    window.scrollTo({top:top+range*stops[i]/4,behavior:reduced.matches?'instant':'smooth'});
   }));
-  size();frame();
-  addEventListener('resize',()=>{size();frame()});
-  let raf=0;addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(()=>{raf=0;frame()})},{passive:true});
+  addEventListener('scroll',scroll,{passive:true});
+  addEventListener('resize',()=>{measure();request()});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){cancelAnimationFrame(raf);raf=0;last=0}else{measure();request()}
+  });
+  reduced.addEventListener('change',request);
+  new ResizeObserver(()=>{measure();request()}).observe(card);
+  if(document.fonts)document.fonts.ready.then(()=>{measure();request()});
+  measure();shown=target;draw(shown);
 })();
+
 </script>
 
 </body>
